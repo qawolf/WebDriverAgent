@@ -48,6 +48,7 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
 @property (nonatomic, strong) RoutingHTTPServer *server;
 @property (atomic, assign) BOOL keepAlive;
 @property (nonatomic, nullable) FBTCPSocket *screenshotsBroadcaster;
+@property (nonatomic, strong) dispatch_queue_t healthCheckQueue;
 @end
 
 @implementation FBWebServer
@@ -88,6 +89,11 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
   [self.server setDefaultHeader:@"Access-Control-Allow-Origin" value:@"*"];
   [self.server setDefaultHeader:@"Access-Control-Allow-Headers" value:@"Content-Type, X-Requested-With"];
   [self.server setConnectionClass:[FBHTTPConnection self]];
+
+  // Create a high priority queue for health checks
+  self.healthCheckQueue = dispatch_queue_create("com.facebook.WebDriverAgent.Health", 
+                                              dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL,
+                                                                                    QOS_CLASS_USER_INTERACTIVE, 0));
 
   [self registerRouteHandlers:[self.class collectCommandHandlerClasses]];
   [self registerServerKeyRouteHandlers];
@@ -216,8 +222,11 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
 
 - (void)registerServerKeyRouteHandlers
 {
+  // Health endpoint runs on a separate high priority queue
   [self.server get:@"/health" withBlock:^(RouteRequest *request, RouteResponse *response) {
-    [response respondWithString:@"<!DOCTYPE html><html><title>Health Check</title><body><p>I-AM-ALIVE</p></body></html>"];
+    dispatch_async(self.healthCheckQueue, ^{
+      [response respondWithString:@"<!DOCTYPE html><html><title>Health Check</title><body><p>I-AM-ALIVE</p></body></html>"];
+    });
   }];
 
   NSString *calibrationPage = @"<html>"
