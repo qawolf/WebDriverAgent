@@ -222,9 +222,9 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
 
 - (void)registerServerKeyRouteHandlers
 {
-  // Health endpoint runs on a separate high priority queue
+  // Health endpoint runs on a separate high priority queue but handles response synchronously
   [self.server get:@"/health" withBlock:^(RouteRequest *request, RouteResponse *response) {
-    dispatch_async(self.healthCheckQueue, ^{
+    dispatch_sync(self.healthCheckQueue, ^{
       [response respondWithString:@"<!DOCTYPE html><html><title>Health Check</title><body><p>I-AM-ALIVE</p></body></html>"];
     });
   }];
