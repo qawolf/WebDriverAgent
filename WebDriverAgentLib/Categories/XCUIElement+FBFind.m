@@ -30,9 +30,9 @@
                                     shouldReturnAfterFirstMatch:(BOOL)shouldReturnAfterFirstMatch
 {
   if (!shouldReturnAfterFirstMatch) {
-    return query.fb_allMatches;
+    return query.allElementsBoundByIndex;
   }
-  XCUIElement *matchedElement = query.fb_firstMatch;
+  XCUIElement *matchedElement = query.firstMatch;
   return matchedElement ? @[matchedElement] : @[];
 }
 
@@ -77,20 +77,9 @@
 - (NSArray<XCUIElement *> *)fb_descendantsMatchingPredicate:(NSPredicate *)predicate
                                 shouldReturnAfterFirstMatch:(BOOL)shouldReturnAfterFirstMatch
 {
-  NSPredicate *formattedPredicate = [NSPredicate fb_snapshotBlockPredicateWithPredicate:predicate];
-  XCUIElementQuery *query = [[self.fb_query descendantsMatchingType:XCUIElementTypeAny] matchingPredicate:formattedPredicate];
-  NSMutableArray<XCUIElement *> *result = [NSMutableArray array];
-  [result addObjectsFromArray:[self.class fb_extractMatchingElementsFromQuery:query
-                                                  shouldReturnAfterFirstMatch:shouldReturnAfterFirstMatch]];
-  id<FBXCElementSnapshot> cachedSnapshot = [self fb_cachedSnapshotWithQuery:query];
-  // Include self element into predicate search
-  if ([formattedPredicate evaluateWithObject:cachedSnapshot]) {
-    if (shouldReturnAfterFirstMatch || result.count == 0) {
-      return @[self];
-    }
-    [result insertObject:self atIndex:0];
-  }
-  return result.copy;
+  XCUIElementQuery *query = [[self.fb_query descendantsMatchingType:XCUIElementTypeAny] matchingPredicate:predicate];
+  return [self.class fb_extractMatchingElementsFromQuery:query
+                                shouldReturnAfterFirstMatch:shouldReturnAfterFirstMatch];
 }
 
 
