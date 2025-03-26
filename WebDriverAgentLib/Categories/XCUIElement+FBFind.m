@@ -82,14 +82,11 @@
   NSMutableArray<XCUIElement *> *result = [NSMutableArray array];
   [result addObjectsFromArray:[self.class fb_extractMatchingElementsFromQuery:query
                                                   shouldReturnAfterFirstMatch:shouldReturnAfterFirstMatch]];
-  id<FBXCElementSnapshot> cachedSnapshot = [self fb_cachedSnapshotWithQuery:query];
-  // Include self element into predicate search
-  if ([formattedPredicate evaluateWithObject:cachedSnapshot]) {
-    if (shouldReturnAfterFirstMatch || result.count == 0) {
-      return @[self];
-    }
-    [result insertObject:self atIndex:0];
+  NSLog(@"[WDA-OPTIMIZATION] Using optimized predicate search path (skipping self evaluation) with predicate: %@", predicate);
+  if (result.count == 0) {
+    return @[self];
   }
+  [result insertObject:self atIndex:0];
   return result.copy;
 }
 
