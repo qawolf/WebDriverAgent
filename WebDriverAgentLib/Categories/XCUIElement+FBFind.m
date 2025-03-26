@@ -68,6 +68,7 @@
                                                      value:(NSString *)value
                                              partialSearch:(BOOL)partialSearch
 {
+  NSLog(@"qawolf_webdriveragent: Searching by property: '%@' with value: '%@' (partialSearch: %@)", property, value, partialSearch ? @"YES" : @"NO");
   NSPredicate *searchPredicate = [NSPredicate predicateWithFormat:(partialSearch ? @"%K CONTAINS %@" : @"%K == %@"), property, value];
   return [self fb_descendantsMatchingPredicate:searchPredicate shouldReturnAfterFirstMatch:NO];
 }

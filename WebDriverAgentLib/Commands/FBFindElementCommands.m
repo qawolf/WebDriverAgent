@@ -156,6 +156,8 @@ shouldReturnAfterFirstMatch:(BOOL)shouldReturnAfterFirstMatch
     NSArray *components = [value componentsSeparatedByString:@"="];
     NSString *propertyValue = components.lastObject;
     NSString *propertyName = (components.count < 2 ? @"name" : components.firstObject);
+    NSLog(@"qawolf_webdriveragent: Using '%@' selector with propertyName: '%@', propertyValue: '%@', partialSearch: %@", 
+          usingText, propertyName, propertyValue, [usingText containsString:@"partial"] ? @"YES" : @"NO");
     return [element fb_descendantsMatchingProperty:propertyName
                                              value:propertyValue
                                      partialSearch:[usingText containsString:@"partial"]];
@@ -169,6 +171,7 @@ shouldReturnAfterFirstMatch:(BOOL)shouldReturnAfterFirstMatch
     return [element fb_descendantsMatchingXPathQuery:value
                          shouldReturnAfterFirstMatch:shouldReturnAfterFirstMatch];
   } else if ([usingText isEqualToString:@"predicate string"]) {
+    NSLog(@"qawolf_webdriveragent: Using predicate string selector with predicate: '%@'", value);
     return [element fb_descendantsMatchingPredicate:[NSPredicate predicateWithFormat:value]
                         shouldReturnAfterFirstMatch:shouldReturnAfterFirstMatch];
   } else if ([usingText isEqualToString:@"name"]
