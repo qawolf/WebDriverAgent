@@ -15,6 +15,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FBTouchActionCommands : NSObject <FBCommandHandler>
 
++ (id<FBResponsePayload>)handlePerformW3CTouchActions:(FBRouteRequest *)request;
+
 @end
 
 NS_ASSUME_NONNULL_END
