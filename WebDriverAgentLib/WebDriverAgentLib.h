@@ -45,6 +45,7 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/FBWebServer.h>
 #import <WebDriverAgentLib/FBXCElementSnapshot.h>
 #import <WebDriverAgentLib/FBXCElementSnapshotWrapper.h>
+#import <WebDriverAgentLib/FBXCodeCompatibility.h>
 #import <WebDriverAgentLib/FBXPath.h>
 #import <WebDriverAgentLib/WebDriverAgentLib.h>
 #import <WebDriverAgentLib/XCDebugLogDelegate-Protocol.h>
