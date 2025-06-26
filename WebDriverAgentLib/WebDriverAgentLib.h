@@ -40,6 +40,7 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/FBRuntimeUtils.h>
 #import <WebDriverAgentLib/FBSession.h>
 #import <WebDriverAgentLib/FBSessionCommands.h>
+#import <WebDriverAgentLib/FBSettings.h>
 #import <WebDriverAgentLib/FBWebServer.h>
 #import <WebDriverAgentLib/FBXCElementSnapshot.h>
 #import <WebDriverAgentLib/FBXCElementSnapshotWrapper.h>
