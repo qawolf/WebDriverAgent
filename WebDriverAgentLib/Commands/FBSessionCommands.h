@@ -47,6 +47,8 @@ NS_ASSUME_NONNULL_BEGIN
                                withApplication:(nullable NSString *)bundleID
                                        timeout:(nullable NSNumber *)timeout;
 
++ (NSString *)deviceNameByUserInterfaceIdiom:(UIUserInterfaceIdiom) userInterfaceIdiom
+
 @end
 
 NS_ASSUME_NONNULL_END
