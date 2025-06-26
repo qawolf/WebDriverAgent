@@ -31,6 +31,7 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/FBKeyboard.h>
 #import <WebDriverAgentLib/FBLogger.h>
 #import <WebDriverAgentLib/FBMacros.h>
+#import <WebDriverAgentLib/FBProtocolHelpers.h>
 #import <WebDriverAgentLib/FBResponseJSONPayload.h>
 #import <WebDriverAgentLib/FBResponsePayload.h>
 #import <WebDriverAgentLib/FBRoute.h>
