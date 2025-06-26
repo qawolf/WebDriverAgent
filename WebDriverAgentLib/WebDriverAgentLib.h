@@ -50,6 +50,7 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/XCDebugLogDelegate-Protocol.h>
 #import <WebDriverAgentLib/XCTestCase.h>
 #import <WebDriverAgentLib/XCTIssue+FBPatcher.h>
+#import <WebDriverAgentLib/XCUIApplication.h>
 #import <WebDriverAgentLib/XCUIApplication+FBHelpers.h>
 #import <WebDriverAgentLib/XCUIApplication+FBQuiescence.h>
 #import <WebDriverAgentLib/XCUIApplicationProcessDelay.h>
