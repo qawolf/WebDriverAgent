@@ -42,6 +42,11 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSDictionary *)sessionInformation;
 + (NSDictionary *)currentCapabilities;
 
+// Deep link opening helper
++ (nullable id<FBResponsePayload>)openDeepLink:(NSString *)initialUrl
+                               withApplication:(nullable NSString *)bundleID
+                                       timeout:(nullable NSNumber *)timeout;
+
 @end
 
 NS_ASSUME_NONNULL_END
