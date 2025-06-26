@@ -8,7 +8,7 @@
  */
 
 #import <WebDriverAgentLib/WebDriverAgentLib.h>
-#import "XCPointerEvent.h"
+#import <WebDriverAgentLib/XCPointerEvent.h>
 
 @class FBXCElementSnapshot;
 
