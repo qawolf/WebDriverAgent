@@ -42,13 +42,13 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSDictionary *)sessionInformation;
 + (NSDictionary *)currentCapabilities;
 
+// Device helper
++ (NSString *)deviceNameByUserInterfaceIdiom:(UIUserInterfaceIdiom)userInterfaceIdiom;
+
 // Deep link opening helper
 + (nullable id<FBResponsePayload>)openDeepLink:(NSString *)initialUrl
                                withApplication:(nullable NSString *)bundleID
                                        timeout:(nullable NSNumber *)timeout;
-
-+ (NSString *)deviceNameByUserInterfaceIdiom:(UIUserInterfaceIdiom) userInterfaceIdiom
-
 @end
 
 NS_ASSUME_NONNULL_END
