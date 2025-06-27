@@ -17,6 +17,7 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 
 #import <WebDriverAgentLib/CDStructures.h>
 #import <WebDriverAgentLib/FBAlert.h>
+#import <WebDriverAgentLib/FBCapabilities.h>
 #import <WebDriverAgentLib/FBCommandHandler.h>
 #import <WebDriverAgentLib/FBCommandStatus.h>
 #import <WebDriverAgentLib/FBConfiguration.h>
@@ -31,6 +32,8 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/FBKeyboard.h>
 #import <WebDriverAgentLib/FBLogger.h>
 #import <WebDriverAgentLib/FBMacros.h>
+#import <WebDriverAgentLib/FBMathUtils.h>
+#import <WebDriverAgentLib/FBProtocolHelpers.h>
 #import <WebDriverAgentLib/FBResponseJSONPayload.h>
 #import <WebDriverAgentLib/FBResponsePayload.h>
 #import <WebDriverAgentLib/FBRoute.h>
@@ -38,16 +41,24 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/FBRunLoopSpinner.h>
 #import <WebDriverAgentLib/FBRuntimeUtils.h>
 #import <WebDriverAgentLib/FBSession.h>
+#import <WebDriverAgentLib/FBSessionCommands.h>
+#import <WebDriverAgentLib/FBSettings.h>
 #import <WebDriverAgentLib/FBWebServer.h>
 #import <WebDriverAgentLib/FBXCElementSnapshot.h>
 #import <WebDriverAgentLib/FBXCElementSnapshotWrapper.h>
+#import <WebDriverAgentLib/FBXCodeCompatibility.h>
 #import <WebDriverAgentLib/FBXPath.h>
 #import <WebDriverAgentLib/WebDriverAgentLib.h>
 #import <WebDriverAgentLib/XCDebugLogDelegate-Protocol.h>
+#import <WebDriverAgentLib/XCPointerEvent.h>
 #import <WebDriverAgentLib/XCTestCase.h>
 #import <WebDriverAgentLib/XCTIssue+FBPatcher.h>
+#import <WebDriverAgentLib/XCUIApplication.h>
 #import <WebDriverAgentLib/XCUIApplication+FBHelpers.h>
+#import <WebDriverAgentLib/XCUIApplication+FBQuiescence.h>
+#import <WebDriverAgentLib/XCUIApplicationProcessDelay.h>
 #import <WebDriverAgentLib/XCUIDevice+FBHelpers.h>
+#import <WebDriverAgentLib/XCUIDevice+FBHealthCheck.h>
 #import <WebDriverAgentLib/XCUIDevice+FBRotation.h>
 #import <WebDriverAgentLib/XCUIElement.h>
 #import <WebDriverAgentLib/XCUIElement+FBAccessibility.h>
