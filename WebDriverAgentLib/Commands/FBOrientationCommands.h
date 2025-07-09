@@ -15,6 +15,11 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface FBOrientationCommands : NSObject <FBCommandHandler>
 
++ (id<FBResponsePayload>)handleGetOrientation:(FBRouteRequest *)request;
++ (id<FBResponsePayload>)handleSetOrientation:(FBRouteRequest *)request;
++ (id<FBResponsePayload>)handleGetRotation:(FBRouteRequest *)request;
++ (id<FBResponsePayload>)handleSetRotation:(FBRouteRequest *)request;
+
 @end
 
 NS_ASSUME_NONNULL_END
