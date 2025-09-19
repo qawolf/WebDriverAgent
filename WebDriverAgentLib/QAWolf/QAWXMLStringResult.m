@@ -8,6 +8,9 @@
 #import "QAWXMLStringResult.h"
 #import <XCTest/XCTest.h>
 
+/**
+    Swift can't catch Objective-C exceptions. This wrapper object holds a reference either of XML string or NSException, so Swift code can inspect possible errors.
+ */
 @implementation QAWXMLStringResult
 
 - (BOOL)isSuccess {
