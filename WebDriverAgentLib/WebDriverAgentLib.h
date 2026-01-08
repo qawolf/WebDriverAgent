@@ -89,3 +89,4 @@ FOUNDATION_EXPORT const unsigned char WebDriverAgentLib_VersionString[];
 #import <WebDriverAgentLib/QAWSnapshotResult.h>
 #import <WebDriverAgentLib/XCUIElementSnapshotParser.h>
 #import <WebDriverAgentLib/QAWXML.h>
+#import <WebDriverAgentLib/QAWObjCExceptionHandler.h>
