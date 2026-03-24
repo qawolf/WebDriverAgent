@@ -87,6 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)valueForElement:(id<FBElement>)element;
 
 + (int)recordWithWriter:(xmlTextWriterPtr)writer forElement:(id<FBElement>)element;
++ (int)recordWithWriter:(xmlTextWriterPtr)writer forValue:(nullable NSString *)value;
 
 + (NSArray<Class> *)supportedAttributes;
 
@@ -152,7 +153,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, nonnull, readonly) NSString* indexValue;
 
-+ (int)recordWithWriter:(xmlTextWriterPtr)writer forValue:(NSString *)value;
+@end
+
+@interface FBApplicationBundleIdAttribute : FBElementAttribute
+
+@end
+
+@interface FBApplicationPidAttribute : FBElementAttribute
 
 @end
 
@@ -173,6 +180,10 @@ NS_ASSUME_NONNULL_BEGIN
 @end
 
 @interface FBMaxValueAttribute : FBElementAttribute
+
+@end
+
+@interface FBCustomActionsAttribute : FBElementAttribute
 
 @end
 
