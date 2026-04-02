@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import "FBWebServer.h"
@@ -93,6 +92,12 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
   [self registerServerKeyRouteHandlers];
 
   NSRange serverPortRange = FBConfiguration.bindingPortRange;
+  NSString *bindingIP = FBConfiguration.bindingIPAddress;
+  if (bindingIP != nil) {
+    [self.server setInterface:bindingIP];
+    [FBLogger logFmt:@"Using custom binding IP address: %@", bindingIP];
+  }
+  
   NSError *error;
   BOOL serverStarted = NO;
 
@@ -112,7 +117,9 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
     [FBLogger logFmt:@"Last attempt to start web server failed with error %@", [error description]];
     abort();
   }
-  [FBLogger logFmt:@"%@http://%@:%d%@", FBServerURLBeginMarker, [XCUIDevice sharedDevice].fb_wifiIPAddress ?: @"localhost", [self.server port], FBServerURLEndMarker];
+  
+  NSString *serverHost = bindingIP ?: ([XCUIDevice sharedDevice].fb_wifiIPAddress ?: @"127.0.0.1");
+  [FBLogger logFmt:@"%@http://%@:%d%@", FBServerURLBeginMarker, serverHost, [self.server port], FBServerURLEndMarker];
 }
 
 - (void)initScreenshotsBroadcaster

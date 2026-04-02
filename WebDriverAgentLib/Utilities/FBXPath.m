@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import "FBXPath.h"
@@ -17,13 +16,15 @@
 #import "FBXMLGenerationOptions.h"
 #import "FBXCElementSnapshotWrapper+Helpers.h"
 #import "NSString+FBXMLSafeString.h"
+#import "XCUIApplication.h"
 #import "XCUIElement.h"
 #import "XCUIElement+FBCaching.h"
 #import "XCUIElement+FBUtilities.h"
 #import "XCUIElement+FBWebDriverAttributes.h"
 #import "XCTestPrivateSymbols.h"
 #import "FBElementHelpers.h"
-
+#import "FBXCAXClientProxy.h"
+#import "FBXCAccessibilityElement.h"
 
 const static char *_UTF8Encoding = "UTF-8";
 
@@ -283,6 +284,10 @@ static NSString *const topNodeIndexPath = @"top";
       [includedAttributes removeObject:FBMinValueAttribute.class];
       [includedAttributes removeObject:FBMaxValueAttribute.class];
     }
+    if (!FBConfiguration.includeCustomActionsInPageSource) {
+      // customActions are retrieved from accessibility attributes and may be slow on deep trees
+      [includedAttributes removeObject:FBCustomActionsAttribute.class];
+    }
     if (nil != excludedAttributes) {
       for (NSString *excludedAttributeName in excludedAttributes) {
         for (Class supportedAttribute in FBElementAttribute.supportedAttributes) {
@@ -367,6 +372,27 @@ static NSString *const topNodeIndexPath = @"top";
     // index path is the special case
     return [FBInternalIndexAttribute recordWithWriter:writer forValue:indexPath];
   }
+  if (element.elementType == XCUIElementTypeApplication) {
+    // only record process identifier and bundle identifier for the application element
+    int pid = [element.accessibilityElement processIdentifier];
+    if (pid > 0) {
+      int rc = [FBApplicationPidAttribute recordWithWriter:writer
+                                                  forValue:[NSString stringWithFormat:@"%d", pid]];
+      if (rc < 0) {
+        return rc;
+      }
+      XCUIApplication *app = [[FBXCAXClientProxy sharedClient]
+                              monitoredApplicationWithProcessIdentifier:pid];
+      NSString *bundleID = [app bundleID];
+      if (nil != bundleID) {
+        rc = [FBApplicationBundleIdAttribute recordWithWriter:writer
+                                                     forValue:bundleID];
+        if (rc < 0) {
+          return rc;
+        }
+      }
+    }
+  }
   return 0;
 }
 
@@ -432,10 +458,12 @@ static NSString *const topNodeIndexPath = @"top";
     return (id<FBXCElementSnapshot>)root;
   }
 
+  // https://github.com/appium/appium-xcuitest-driver/pull/2565
   if (useNative) {
     return [(XCUIElement *)root fb_nativeSnapshot];
   }
-  return [root isKindOfClass:XCUIApplication.class]
+  // https://github.com/appium/WebDriverAgent/issues/1085
+  return [root isKindOfClass:XCUIApplication.class] && !FBConfiguration.enforceCustomSnapshots
     ? [(XCUIElement *)root fb_standardSnapshot]
     : [(XCUIElement *)root fb_customSnapshot];
 }
@@ -480,6 +508,11 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 + (int)recordWithWriter:(xmlTextWriterPtr)writer forElement:(id<FBElement>)element
 {
   NSString *value = [self valueForElement:element];
+  return [self recordWithWriter:writer forValue:value];
+}
+
++ (int)recordWithWriter:(xmlTextWriterPtr)writer forValue:(nullable NSString *)value
+{
   if (nil == value) {
     // Skip the attribute if the value equals to nil
     return 0;
@@ -518,6 +551,7 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
            FBNativeFrameAttribute.class,
            FBMinValueAttribute.class,
            FBMaxValueAttribute.class,
+           FBCustomActionsAttribute.class,
           ];
 }
 
@@ -725,22 +759,25 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
   return kXMLIndexPathKey;
 }
 
-+ (int)recordWithWriter:(xmlTextWriterPtr)writer forValue:(NSString *)value
-{
-  if (nil == value) {
-    // Skip the attribute if the value equals to nil
-    return 0;
-  }
-  int rc = xmlTextWriterWriteAttribute(writer,
-                                       (xmlChar *)[[FBXPath safeXmlStringWithString:[self name]] UTF8String],
-                                       (xmlChar *)[[FBXPath safeXmlStringWithString:value] UTF8String]);
-  if (rc < 0) {
-    [FBLogger logFmt:@"Failed to invoke libxml2>xmlTextWriterWriteAttribute(%@='%@'). Error code: %d", [self name], value, rc];
-  }
-  return rc;
-}
 @end
 
+@implementation FBApplicationBundleIdAttribute : FBElementAttribute
+
++ (NSString *)name
+{
+  return @"bundleId";
+}
+
+@end
+
+@implementation FBApplicationPidAttribute : FBElementAttribute
+
++ (NSString *)name
+{
+  return @"processId";
+}
+
+@end
 
 @implementation FBPlaceholderValueAttribute
 
@@ -806,6 +843,20 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 + (NSString *)valueForElement:(id<FBElement>)element
 {
   return [element.wdMaxValue stringValue];
+}
+
+@end
+
+@implementation FBCustomActionsAttribute
+
++ (NSString *)name
+{
+  return @"customActions";
+}
+
++ (NSString *)valueForElement:(id<FBElement>)element
+{
+  return element.wdCustomActions;
 }
 
 @end

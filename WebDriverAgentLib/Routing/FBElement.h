@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import <CoreGraphics/CoreGraphics.h>
@@ -76,6 +75,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 /*! Element's maximum value */
 @property (nonatomic, readonly, strong, nullable) NSNumber *wdMaxValue;
+
+/*! Element's custom actions */
+@property (nonatomic, readonly, strong, nullable) NSString *wdCustomActions;
 
 /**
  Returns value of given property specified in WebDriver Spec

@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import "XCUIApplication+FBHelpers.h"
@@ -205,6 +204,7 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
   info[@"value"] = FBValueOrNull(wrappedSnapshot.wdValue);
   info[@"label"] = FBValueOrNull(wrappedSnapshot.wdLabel);
   info[@"rect"] = wrappedSnapshot.wdRect;
+  info[@"customActions"] = FBValueOrNull(wrappedSnapshot.wdCustomActions);
   
   NSDictionary<NSString *, NSString *(^)(void)> *attributeBlocks = [self fb_attributeBlockMapForWrappedSnapshot:wrappedSnapshot];
 
@@ -621,23 +621,17 @@ NSDictionary<NSString *, NSString *> *customExclusionAttributesMap(void) {
 {
   XCUIApplication *systemApp = self.fb_systemApplication;
   @try {
-    if (!systemApp.running) {
-      [systemApp launch];
-    } else {
+    if (systemApp.running) {
       [systemApp activate];
+    } else {
+      [systemApp launch];
     }
   } @catch (NSException *e) {
     return [[[FBErrorBuilder alloc]
              withDescription:nil == e ? @"Cannot open the home screen" : e.reason]
             buildError:error];
   }
-  return [[[[FBRunLoopSpinner new]
-            timeout:5]
-           timeoutErrorMessage:@"Timeout waiting until the home screen is visible"]
-          spinUntilTrue:^BOOL{
-    return [systemApp fb_isSameAppAs:self.fb_activeApplication];
-  }
-          error:error];
+  return YES;
 }
 
 - (BOOL)fb_isSameAppAs:(nullable XCUIApplication *)otherApp

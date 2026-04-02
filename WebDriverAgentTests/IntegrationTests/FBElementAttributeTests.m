@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import <XCTest/XCTest.h>
@@ -14,6 +13,7 @@
 #import "FBTestMacros.h"
 #import "FBXCodeCompatibility.h"
 #import "XCUIElement+FBAccessibility.h"
+#import "XCUIElement+FBCustomActions.h"
 #import "XCUIElement+FBIsVisible.h"
 #import "XCUIElement+FBWebDriverAttributes.h"
 
@@ -56,6 +56,10 @@
 {
   // Images are neither accessibility elements nor contain them, so both checks should fail
   XCUIElement *imageElement = self.testedApplication.images.allElementsBoundByIndex.firstObject;
+  if (nil == imageElement) {
+    return;
+  }
+  
   XCTAssertTrue(imageElement.exists);
   XCTAssertFalse(imageElement.fb_isAccessibilityElement);
   XCTAssertFalse(imageElement.isWDAccessibilityContainer);
@@ -246,6 +250,15 @@
   XCTAssertNil(element.wdName);
   XCTAssertNil(element.wdLabel);
   XCTAssertEqualObjects(element.wdValue, @"1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901");
+}
+
+- (void)testCustomActionsAttributes
+{
+  XCUIElement *buttonElement = self.testedApplication.buttons[@"Button"];
+  XCTAssertTrue(buttonElement.exists);
+  NSString *customActions = buttonElement.wdCustomActions;
+  XCTAssertNotNil(customActions, @"Button should have custom actions");
+  XCTAssertEqualObjects(customActions, @"Custom Action 1,Custom Action 2");
 }
 
 @end

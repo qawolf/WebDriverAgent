@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import "FBSettings.h"
@@ -19,6 +18,7 @@ NSString* const FB_SETTING_SCREENSHOT_QUALITY = @"screenshotQuality";
 NSString* const FB_SETTING_KEYBOARD_AUTOCORRECTION = @"keyboardAutocorrection";
 NSString* const FB_SETTING_KEYBOARD_PREDICTION = @"keyboardPrediction";
 NSString* const FB_SETTING_SNAPSHOT_MAX_DEPTH = @"snapshotMaxDepth";
+NSString* const FB_SETTING_SNAPSHOT_MAX_CHILDREN = @"snapshotMaxChildren";
 NSString* const FB_SETTING_USE_FIRST_MATCH = @"useFirstMatch";
 NSString* const FB_SETTING_BOUND_ELEMENTS_BY_INDEX = @"boundElementsByIndex";
 NSString* const FB_SETTING_REDUCE_MOTION = @"reduceMotion";
@@ -39,3 +39,5 @@ NSString* const FB_SETTING_AUTO_CLICK_ALERT_SELECTOR = @"autoClickAlertSelector"
 NSString* const FB_SETTING_INCLUDE_HITTABLE_IN_PAGE_SOURCE = @"includeHittableInPageSource";
 NSString* const FB_SETTING_INCLUDE_NATIVE_FRAME_IN_PAGE_SOURCE = @"includeNativeFrameInPageSource";
 NSString* const FB_SETTING_INCLUDE_MIN_MAX_VALUE_IN_PAGE_SOURCE = @"includeMinMaxValueInPageSource";
+NSString* const FB_SETTING_INCLUDE_CUSTOM_ACTIONS_IN_PAGE_SOURCE = @"includeCustomActionsInPageSource";
+NSString* const FB_SETTING_ENFORCE_CUSTOM_SNAPSHOTS = @"enforceCustomSnapshots";

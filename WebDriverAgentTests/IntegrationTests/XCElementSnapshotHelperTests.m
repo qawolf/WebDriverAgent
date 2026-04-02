@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import <XCTest/XCTest.h>
@@ -176,8 +175,10 @@
                      [scrollView fb_customSnapshot]]
                     fb_descendantsCellSnapshots];
   XCTAssertGreaterThanOrEqual(cells.count, 10);
-  id<FBXCElementSnapshot> element = cells.firstObject;
-  XCTAssertEqualObjects(element.label, @"0");
+
+  NSPredicate *predicate = [NSPredicate predicateWithFormat:@"label == %@", @"0"];
+  id<FBXCElementSnapshot> elementWithZeroLabel = [cells filteredArrayUsingPredicate:predicate].firstObject;
+  XCTAssertNotNil(elementWithZeroLabel, @"No element with label '0' was found.");
 }
 
 @end

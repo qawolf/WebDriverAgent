@@ -3,8 +3,7 @@
  * All rights reserved.
  *
  * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * LICENSE file in the root directory of this source tree.
  */
 
 #import "FBConfiguration.h"
@@ -14,6 +13,7 @@
 #import "TIPreferencesController.h"
 
 #include <dlfcn.h>
+#include <limits.h>
 #import <UIKit/UIKit.h>
 
 #include "TargetConditionals.h"
@@ -64,6 +64,8 @@ static UIInterfaceOrientation FBScreenshotOrientation;
 static BOOL FBShouldIncludeHittableInPageSource = NO;
 static BOOL FBShouldIncludeNativeFrameInPageSource = NO;
 static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
+static BOOL FBShouldIncludeCustomActionsInPageSource = NO;
+static BOOL FBShouldEnforceCustomSnapshots = NO;
 
 @implementation FBConfiguration
 
@@ -138,12 +140,23 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
   return NSMakeRange(DefaultStartingPort, DefaultPortRange);
 }
 
++ (NSString *)bindingIPAddress
+{
+  // Existence of USE_IP in the environment allows specifying which interface to bind to
+  if (NSProcessInfo.processInfo.environment[@"USE_IP"] &&
+      [NSProcessInfo.processInfo.environment[@"USE_IP"] length] > 0) {
+    return NSProcessInfo.processInfo.environment[@"USE_IP"];
+  }
+
+  return nil;
+}
+
 + (NSInteger)mjpegServerPort
 {
   if (self.mjpegServerPortFromArguments != NSNotFound) {
     return self.mjpegServerPortFromArguments;
   }
-  
+
   if (NSProcessInfo.processInfo.environment[@"MJPEG_SERVER_PORT"] &&
       [NSProcessInfo.processInfo.environment[@"MJPEG_SERVER_PORT"] length] > 0) {
     return [NSProcessInfo.processInfo.environment[@"MJPEG_SERVER_PORT"] integerValue];
@@ -225,7 +238,7 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
   if (nil == FBMaxTypingFrequency) {
     return [self defaultTypingFrequency];
   }
-  return FBMaxTypingFrequency.integerValue <= 0 
+  return FBMaxTypingFrequency.integerValue <= 0
     ? [self defaultTypingFrequency]
     : FBMaxTypingFrequency.integerValue;
 }
@@ -373,6 +386,16 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
   return [FBGetCustomParameterForElementSnapshot(FBSnapshotMaxDepthKey) intValue];
 }
 
++ (void)setSnapshotMaxChildren:(int)maxChildren
+{
+  FBSetCustomParameterForElementSnapshot(FBSnapshotMaxChildrenKey, @(maxChildren));
+}
+
++ (int)snapshotMaxChildren
+{
+  return [FBGetCustomParameterForElementSnapshot(FBSnapshotMaxChildrenKey) intValue];
+}
+
 + (void)setShouldRespectSystemAlerts:(BOOL)value
 {
   FBShouldRespectSystemAlerts = value;
@@ -505,6 +528,7 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
       return @"landscapeLeft";
     case UIInterfaceOrientationUnknown:
       return @"auto";
+    default: break;
   }
 }
 #endif
@@ -528,6 +552,7 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
   FBAnimationCoolOffTimeout = 2.;
   // 50 should be enough for the majority of the cases. The performance is acceptable for values up to 100.
   FBSetCustomParameterForElementSnapshot(FBSnapshotMaxDepthKey, @50);
+  FBSetCustomParameterForElementSnapshot(FBSnapshotMaxChildrenKey, @INT_MAX);
   FBUseClearTextShortcut = YES;
   FBLimitXpathContextScope = YES;
 #if !TARGET_OS_TV
@@ -673,6 +698,26 @@ static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
 + (BOOL)includeMinMaxValueInPageSource
 {
   return FBShouldIncludeMinMaxValueInPageSource;
+}
+
++ (void)setIncludeCustomActionsInPageSource:(BOOL)enabled
+{
+  FBShouldIncludeCustomActionsInPageSource = enabled;
+}
+
++ (BOOL)includeCustomActionsInPageSource
+{
+  return FBShouldIncludeCustomActionsInPageSource;
+}
+
++ (void)setEnforceCustomSnapshots:(BOOL)enabled
+{
+  FBShouldEnforceCustomSnapshots = enabled;
+}
+
++ (BOOL)enforceCustomSnapshots
+{
+  return FBShouldEnforceCustomSnapshots;
 }
 
 @end
