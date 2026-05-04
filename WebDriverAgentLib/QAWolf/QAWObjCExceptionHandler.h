@@ -9,6 +9,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Domain used for NSErrors produced by QAWObjCExceptionHandler. */
+extern NSString* const QAWObjCExceptionDomain;
+
 typedef id _Nullable (^ObjCExceptionBlock)(void);
 
 @interface QAWObjCExceptionHandler : NSObject

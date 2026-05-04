@@ -6,6 +6,8 @@
 //
 #import "QAWObjCExceptionHandler.h"
 
+NSString* const QAWObjCExceptionDomain = @"QAWObjCExceptionDomain";
+
 @implementation QAWObjCExceptionHandler
 
 + (id _Nullable)tryBlock:(ObjCExceptionBlock)block
@@ -27,7 +29,7 @@
                 userInfo[@"callStackSymbols"] = exception.callStackSymbols;
             }
             
-            *error = [NSError errorWithDomain:@"QAWObjCExceptionDomain"
+            *error = [NSError errorWithDomain:QAWObjCExceptionDomain
                                          code:-1
                                      userInfo:userInfo];
         }
