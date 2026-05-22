@@ -48,9 +48,25 @@ static NSString *const SOURCE_FORMAT_DESCRIPTION = @"description";
     NSArray<NSString *> *excludedAttributes = nil == request.parameters[@"excluded_attributes"]
       ? nil
       : [request.parameters[@"excluded_attributes"] componentsSeparatedByString:@","];
+    // PoC (poc/warm-visibility-cache): parse `warm_visibility_cache` querystring
+    // into a tri-state NSNumber (nil = not specified, @YES/@NO = explicit).
+    // Accepts "true"/"1"/"yes" (case-insensitive) as truthy; anything else
+    // present becomes @NO. Forwarded to FBXMLGenerationOptions so the XML
+    // generator in FBXPath can decide whether to pre-warm the visibility cache.
+    NSString *warmParam = request.parameters[@"warm_visibility_cache"];
+    NSNumber *warmVisibilityCache = nil;
+    if (nil != warmParam) {
+      NSString *normalized = [warmParam lowercaseString];
+      warmVisibilityCache = ([normalized isEqualToString:@"true"]
+                             || [normalized isEqualToString:@"1"]
+                             || [normalized isEqualToString:@"yes"])
+        ? @YES
+        : @NO;
+    }
     result = [application fb_xmlRepresentationWithOptions:
-        [[[FBXMLGenerationOptions new]
-          withExcludedAttributes:excludedAttributes]
+        [[[[FBXMLGenerationOptions new]
+           withExcludedAttributes:excludedAttributes]
+          withWarmVisibilityCache:warmVisibilityCache]
          withScope:sourceScope]];
   } else if ([sourceType caseInsensitiveCompare:SOURCE_FORMAT_JSON] == NSOrderedSame) {
     NSString *excludedAttributesString = request.parameters[@"excluded_attributes"];

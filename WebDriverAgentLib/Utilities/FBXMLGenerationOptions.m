@@ -22,4 +22,10 @@
   return self;
 }
 
+- (FBXMLGenerationOptions *)withWarmVisibilityCache:(NSNumber *)warmVisibilityCache
+{
+  self.warmVisibilityCache = warmVisibilityCache;
+  return self;
+}
+
 @end

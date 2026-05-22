@@ -40,6 +40,42 @@ static NSString *const topNodeIndexPath = @"top";
   return nil;
 }
 
+/**
+ PoC (poc/warm-visibility-cache): walk the snapshot tree and resolve
+ `wdVisible` (a.k.a. `fb_isVisible`) only for **leaf** nodes — those without
+ children.
+
+ Why only leaves? The Tier B short-circuit in `fb_hasVisibleDescendants`
+ iterates `_allDescendants` and returns YES as soon as it finds any descendant
+ whose visibility is already cached as YES. The descendant doesn't have to be
+ a direct child or a leaf — it just has to be cached. So warming the leaves
+ guarantees that every internal node with at least one visible leaf in its
+ subtree will short-circuit. The Tier C cost is unchanged either way (the only
+ nodes that still pay the synchronous AX IPC are the ones whose entire
+ subtree is invisible), but skipping internal nodes during the warm pass
+ avoids redundant `_allDescendants` traversals (one per internal node, ~O(n²)
+ in aggregate).
+
+ Side effects: mutates `snapshot.additionalAttributes` on each visited leaf
+ (via the cache backfill inside `fb_isVisible`). No throwing.
+ */
++ (void)warmVisibilityCacheForSnapshot:(nullable id<FBXCElementSnapshot>)snapshot
+{
+  if (nil == snapshot) {
+    return;
+  }
+  NSArray *children = snapshot.children;
+  if (0 == children.count) {
+    // Leaf: warm here. Internal ancestors will piggy-back on this via Tier B
+    // (`fb_hasVisibleDescendants` finds the cached entry and short-circuits).
+    (void)[FBXCElementSnapshotWrapper ensureWrapped:snapshot].wdVisible;
+    return;
+  }
+  for (id<FBXCElementSnapshot> child in children) {
+    [self warmVisibilityCacheForSnapshot:child];
+  }
+}
+
 + (nullable NSString *)xmlStringWithRootElement:(id<FBElement>)root
                                         options:(nullable FBXMLGenerationOptions *)options
 {
@@ -62,8 +98,18 @@ static NSString *const topNodeIndexPath = @"top";
       [self waitUntilStableWithElement:root];
       // If 'includeHittableInPageSource' setting is enabled, then use native snapshots
       // to calculate a more accurate value for the 'hittable' attribute.
-      rc = [self xmlRepresentationWithRootElement:[self snapshotWithRoot:root
-                                                        useNative:FBConfiguration.includeHittableInPageSource]
+      id<FBXCElementSnapshot> snap = [self snapshotWithRoot:root
+                                                  useNative:FBConfiguration.includeHittableInPageSource];
+      // PoC: opt-in visibility-cache warming. `boolValue` on a nil NSNumber
+      // returns NO, so the absence of the `warm_visibility_cache` querystring
+      // is a no-op and existing behaviour is preserved.
+      if ([options.warmVisibilityCache boolValue]) {
+        NSDate *start = [NSDate date];
+        [self warmVisibilityCacheForSnapshot:snap];
+        [FBLogger logFmt:@"[VisCache] (FBXPath) Warmed visibility cache in %.3fs",
+         ABS([start timeIntervalSinceNow])];
+      }
+      rc = [self xmlRepresentationWithRootElement:snap
                                            writer:writer
                                      elementStore:nil
                                             query:nil

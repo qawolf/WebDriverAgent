@@ -25,6 +25,22 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, nullable) NSArray<NSString *> *excludedAttributes;
 
 /**
+ Whether to pre-warm the snapshot's visibility cache before XML generation.
+
+ When non-nil and truthy, the XML generator performs a post-order walk of the
+ snapshot tree and resolves each node's `visible` attribute before producing
+ the XML. This populates the snapshot's `additionalAttributes` cache so that
+ the descendant-visibility short-circuit in `fb_hasVisibleDescendants` (the
+ "Tier B" heuristic) actually fires for parent nodes, instead of always
+ falling through to the expensive synchronous AX-framework IPC.
+
+ Nil means "no warming" (default behaviour). A tri-state NSNumber is used so
+ that callers may explicitly disable warming (@NO) and future versions can
+ layer in a session-wide fallback without changing the API.
+ */
+@property (nonatomic, nullable) NSNumber *warmVisibilityCache;
+
+/**
  Allows to provide XML scope.
 
  @param scope See the property description above
@@ -39,6 +55,14 @@ NS_ASSUME_NONNULL_BEGIN
  @return self instance for chaining
  */
 - (FBXMLGenerationOptions *)withExcludedAttributes:(nullable NSArray<NSString *> *)excludedAttributes;
+
+/**
+ Allows to opt in to (or out of) the visibility-cache pre-warm pass.
+
+ @param warmVisibilityCache See the property description above
+ @return self instance for chaining
+ */
+- (FBXMLGenerationOptions *)withWarmVisibilityCache:(nullable NSNumber *)warmVisibilityCache;
 
 @end
 
