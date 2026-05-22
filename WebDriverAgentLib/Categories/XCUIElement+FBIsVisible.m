@@ -8,7 +8,10 @@
 
 #import "XCUIElement+FBIsVisible.h"
 
+#import <stdatomic.h>
+
 #import "FBElementUtils.h"
+#import "FBLogger.h"
 #import "FBXCodeCompatibility.h"
 #import "FBXCElementSnapshotWrapper+Helpers.h"
 #import "XCUIElement+FBUtilities.h"
@@ -36,12 +39,40 @@ NSNumber* _Nullable fetchSnapshotVisibility(id<FBXCElementSnapshot> snapshot)
 
 - (BOOL)fb_hasVisibleDescendants
 {
+  // PoC (poc/log-tier-b-cache-hits): observability-only. Instrument the Tier B
+  // short-circuit so we can measure how often it actually fires vs falls
+  // through to the Tier C synchronous AX-framework IPC. Counters are
+  // process-wide and accumulate across requests; logging every 50 calls keeps
+  // the output volume tractable on dense screens (500+ nodes per /source).
+  // No behaviour change — this PR only adds the log line.
+  static _Atomic NSUInteger fbVisCacheTierBCalls = 0;
+  static _Atomic NSUInteger fbVisCacheTierBHits = 0;
+
+  NSUInteger descendantsWalked = 0;
+  BOOL hit = NO;
   for (id<FBXCElementSnapshot> descendant in (self._allDescendants ?: @[])) {
+    descendantsWalked++;
     if ([fetchSnapshotVisibility(descendant) boolValue]) {
-      return YES;
+      hit = YES;
+      break;
     }
   }
-  return NO;
+
+  NSUInteger calls = atomic_fetch_add(&fbVisCacheTierBCalls, 1) + 1;
+  if (hit) {
+    atomic_fetch_add(&fbVisCacheTierBHits, 1);
+  }
+  if (0 == (calls % 50)) {
+    NSUInteger hits = atomic_load(&fbVisCacheTierBHits);
+    double hitRate = 100.0 * (double)hits / (double)calls;
+    [FBLogger logFmt:@"[VisCache] Tier-B stats: calls=%lu hits=%lu (%.1f%%) lastWalked=%lu lastResult=%@",
+     (unsigned long)calls,
+     (unsigned long)hits,
+     hitRate,
+     (unsigned long)descendantsWalked,
+     hit ? @"YES" : @"NO"];
+  }
+  return hit;
 }
 
 - (BOOL)fb_isVisible
