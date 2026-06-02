@@ -48,13 +48,13 @@ static NSString *const SOURCE_FORMAT_DESCRIPTION = @"description";
     NSArray<NSString *> *excludedAttributes = nil == request.parameters[@"excluded_attributes"]
       ? nil
       : [request.parameters[@"excluded_attributes"] componentsSeparatedByString:@","];
-    // PoC (poc/warm-visibility-cache): parse `warm_visibility_cache` querystring
-    // into a tri-state NSNumber (nil = not specified, @YES/@NO = explicit).
-    // Accepts "true"/"1"/"yes" (case-insensitive) as truthy; anything else
-    // present becomes @NO. Forwarded to FBXMLGenerationOptions so the XML
-    // generator in FBXPath can decide whether to pre-warm the visibility cache.
+    // PoC (poc/warm-visibility-cache): `warm_visibility_cache` querystring as a
+    // tri-state NSNumber. Default is @YES (warming ON) so /source always
+    // pre-warms the visibility cache without needing the querystring; callers
+    // can still explicitly opt out with warm_visibility_cache=false|0|no.
+    // Forwarded to FBXMLGenerationOptions so FBXPath performs the pre-warm pass.
     NSString *warmParam = request.parameters[@"warm_visibility_cache"];
-    NSNumber *warmVisibilityCache = nil;
+    NSNumber *warmVisibilityCache = @YES;
     if (nil != warmParam) {
       NSString *normalized = [warmParam lowercaseString];
       warmVisibilityCache = ([normalized isEqualToString:@"true"]

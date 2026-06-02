@@ -46,6 +46,17 @@ static NSString *const topNodeIndexPath = @"top";
     }
   }
 
+  // PoC (poc/warm-visibility-cache): the batched page-source path (production
+  // uses use_batch=true) emits `visible` through the same fb_isVisible chain as
+  // the classic path, but never runs the warming pass in
+  // FBXPath.xmlStringWithRootElement. Warm here so the Tier B descendant-cache
+  // short-circuit fires on this path too. Always-on: the batched options do not
+  // plumb the warm_visibility_cache querystring.
+  NSDate *warmStart = [NSDate date];
+  [FBXPath warmVisibilityCacheForSnapshot:root.snapshot];
+  [FBLogger logFmt:@"[VisCache] (QAWXML) Warmed visibility cache in %.3fs",
+   ABS([warmStart timeIntervalSinceNow])];
+
   NSMutableArray<SnapshotWithId *> *leaves = [NSMutableArray array];
   if (rc >= 0) {
     // If 'includeHittableInPageSource' setting is enabled, then use native snapshots
