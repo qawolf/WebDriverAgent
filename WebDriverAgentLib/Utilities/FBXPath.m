@@ -41,39 +41,39 @@ static NSString *const topNodeIndexPath = @"top";
 }
 
 /**
- PoC (poc/warm-visibility-cache): walk the snapshot tree and resolve
- `wdVisible` (a.k.a. `fb_isVisible`) only for **leaf** nodes — those without
- children.
+ Walks the snapshot tree and resolves `wdVisible` (a.k.a. `fb_isVisible`)
+ only for **leaf** nodes — those without children.
 
- Why only leaves? The Tier B short-circuit in `fb_hasVisibleDescendants`
- iterates `_allDescendants` and returns YES as soon as it finds any descendant
- whose visibility is already cached as YES. The descendant doesn't have to be
- a direct child or a leaf — it just has to be cached. So warming the leaves
- guarantees that every internal node with at least one visible leaf in its
- subtree will short-circuit. The Tier C cost is unchanged either way (the only
- nodes that still pay the synchronous AX IPC are the ones whose entire
- subtree is invisible), but skipping internal nodes during the warm pass
- avoids redundant `_allDescendants` traversals (one per internal node, ~O(n²)
- in aggregate).
+ Why only leaves? The descendant-cache short-circuit in
+ `fb_hasVisibleDescendants` iterates `_allDescendants` and returns YES as soon
+ as it finds any descendant whose visibility is already cached as YES. The
+ descendant doesn't have to be a direct child or a leaf — it just has to be
+ cached. Warming the leaves guarantees that every internal node with at
+ least one visible leaf in its subtree will short-circuit. The IPC cost for
+ fully-invisible subtrees is unchanged either way, but skipping internal
+ nodes during the warm pass avoids redundant `_allDescendants` traversals
+ (one per internal node, ~O(n²) in aggregate).
 
  Side effects: mutates `snapshot.additionalAttributes` on each visited leaf
  (via the cache backfill inside `fb_isVisible`). No throwing.
  */
-+ (void)warmVisibilityCacheForSnapshot:(nullable id<FBXCElementSnapshot>)snapshot
++ (NSUInteger)warmVisibilityCacheForSnapshot:(nullable id<FBXCElementSnapshot>)snapshot
 {
   if (nil == snapshot) {
-    return;
+    return 0;
   }
   NSArray *children = snapshot.children;
   if (0 == children.count) {
-    // Leaf: warm here. Internal ancestors will piggy-back on this via Tier B
-    // (`fb_hasVisibleDescendants` finds the cached entry and short-circuits).
+    // Leaf: warm here. Internal ancestors piggy-back on this via
+    // `fb_hasVisibleDescendants` finding the cached entry and short-circuiting.
     (void)[FBXCElementSnapshotWrapper ensureWrapped:snapshot].wdVisible;
-    return;
+    return 1;
   }
+  NSUInteger leavesWarmed = 0;
   for (id<FBXCElementSnapshot> child in children) {
-    [self warmVisibilityCacheForSnapshot:child];
+    leavesWarmed += [self warmVisibilityCacheForSnapshot:child];
   }
+  return leavesWarmed;
 }
 
 + (nullable NSString *)xmlStringWithRootElement:(id<FBElement>)root
@@ -100,13 +100,14 @@ static NSString *const topNodeIndexPath = @"top";
       // to calculate a more accurate value for the 'hittable' attribute.
       id<FBXCElementSnapshot> snap = [self snapshotWithRoot:root
                                                   useNative:FBConfiguration.includeHittableInPageSource];
-      // PoC: opt-in visibility-cache warming. `boolValue` on a nil NSNumber
-      // returns NO, so the absence of the `warm_visibility_cache` querystring
-      // is a no-op and existing behaviour is preserved.
-      if ([options.warmVisibilityCache boolValue]) {
+      BOOL preWarm = [FBConfiguration preWarmPageSource];
+      [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] (FBXPath) preWarmPageSource=%@",
+       preWarm ? @"YES" : @"NO"];
+      if (preWarm) {
         NSDate *start = [NSDate date];
-        [self warmVisibilityCacheForSnapshot:snap];
-        [FBLogger logFmt:@"[VisCache] (FBXPath) Warmed visibility cache in %.3fs",
+        NSUInteger leavesWarmed = [self warmVisibilityCacheForSnapshot:snap];
+        [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] (FBXPath) Warmed %lu leaves in %.3fs",
+         (unsigned long)leavesWarmed,
          ABS([start timeIntervalSinceNow])];
       }
       rc = [self xmlRepresentationWithRootElement:snap

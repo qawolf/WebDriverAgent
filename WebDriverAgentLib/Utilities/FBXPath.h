@@ -74,12 +74,16 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)safeXmlStringWithString:(NSString *)str;
 
 /**
-    PoC (poc/warm-visibility-cache) — exposed for the QAWXML batched page-source
-    path. Resolves visibility on leaf snapshots before XML generation so the
+    Resolves visibility on leaf snapshots before XML generation so the
     descendant-cache short-circuit in `fb_hasVisibleDescendants` fires for
     internal nodes, instead of every node paying the synchronous AX-framework IPC.
+
+    Exposed for the QAWXML batched page-source path. Gated by the
+    `preWarmPageSource` session setting at call sites.
+
+    @return Number of leaves that were warmed (used for diagnostic logging).
  */
-+ (void)warmVisibilityCacheForSnapshot:(nullable id<FBXCElementSnapshot>)snapshot;
++ (NSUInteger)warmVisibilityCacheForSnapshot:(nullable id<FBXCElementSnapshot>)snapshot;
 
 @end
 

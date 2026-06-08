@@ -46,16 +46,22 @@ static NSString *const topNodeIndexPath = @"top";
     }
   }
 
-  // PoC (poc/warm-visibility-cache): the batched page-source path (production
-  // uses use_batch=true) emits `visible` through the same fb_isVisible chain as
-  // the classic path, but never runs the warming pass in
-  // FBXPath.xmlStringWithRootElement. Warm here so the Tier B descendant-cache
-  // short-circuit fires on this path too. Always-on: the batched options do not
-  // plumb the warm_visibility_cache querystring.
-  NSDate *warmStart = [NSDate date];
-  [FBXPath warmVisibilityCacheForSnapshot:root.snapshot];
-  [FBLogger logFmt:@"[VisCache] (QAWXML) Warmed visibility cache in %.3fs",
-   ABS([warmStart timeIntervalSinceNow])];
+  // The batched page-source path (production uses use_batch=true) emits
+  // `visible` through the same fb_isVisible chain as the classic path. Warm
+  // here so the descendant-cache short-circuit fires on this path too.
+  // Gated by the same FBConfiguration.preWarmPageSource setting as the
+  // classic path so a single toggle (via /appium/settings or the
+  // appium:settings capability) controls both.
+  BOOL preWarm = [FBConfiguration preWarmPageSource];
+  [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] (QAWXML) preWarmPageSource=%@",
+   preWarm ? @"YES" : @"NO"];
+  if (preWarm) {
+    NSDate *warmStart = [NSDate date];
+    NSUInteger leavesWarmed = [FBXPath warmVisibilityCacheForSnapshot:root.snapshot];
+    [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] (QAWXML) Warmed %lu leaves in %.3fs",
+     (unsigned long)leavesWarmed,
+     ABS([warmStart timeIntervalSinceNow])];
+  }
 
   NSMutableArray<SnapshotWithId *> *leaves = [NSMutableArray array];
   if (rc >= 0) {

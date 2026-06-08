@@ -405,6 +405,22 @@ typedef NS_ENUM(NSInteger, FBConfigurationKeyboardPreference) {
 + (BOOL)includeCustomActionsInPageSource;
 
 /**
+ * Whether to pre-warm the snapshot's visibility cache before page-source XML
+ * generation.
+ *
+ * When enabled, the XML generator walks the leaves of the snapshot tree and
+ * resolves each leaf's `visible` attribute up front. Internal nodes then
+ * short-circuit in `fb_hasVisibleDescendants` (they find a cached-visible
+ * descendant and skip the synchronous AX-framework IPC). Skipping internal
+ * nodes during the warm pass avoids redundant `_allDescendants` traversals.
+ * Enabled by default.
+ *
+ * @param enabled Either YES or NO
+ */
++ (void)setPreWarmPageSource:(BOOL)enabled;
++ (BOOL)preWarmPageSource;
+
+/**
  * Whether to enforce the use of custom snapshots instead of standard snapshots.
  * When enabled, fb_customSnapshot is always invoked instead of fb_standardSnapshot
  * for XPath tree building and element attributes fetching.

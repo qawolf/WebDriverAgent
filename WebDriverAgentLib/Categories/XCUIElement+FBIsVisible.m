@@ -39,13 +39,14 @@ NSNumber* _Nullable fetchSnapshotVisibility(id<FBXCElementSnapshot> snapshot)
 
 - (BOOL)fb_hasVisibleDescendants
 {
-  // PoC (poc/warm-visibility-cache): instrument the Tier B short-circuit so we
-  // can measure how often it actually fires vs falls through. Counters are
-  // process-wide; they accumulate across requests, which is fine for PoC
-  // observation. Logging every 50 calls keeps the output volume tractable on
-  // dense screens (500+ nodes per /source).
-  static _Atomic NSUInteger fbVisCacheTierBCalls = 0;
-  static _Atomic NSUInteger fbVisCacheTierBHits = 0;
+  // Instrument the descendant-cache short-circuit so we can measure how often
+  // it fires vs falls through to the synchronous AX-framework IPC. Counters
+  // are process-wide and accumulate across requests; this is intentional —
+  // the rate (hits/calls) is the useful signal, not the absolute totals.
+  // Logging every 50 calls keeps the output tractable on dense screens
+  // (500+ nodes per /source).
+  static _Atomic NSUInteger fbVisCacheCalls = 0;
+  static _Atomic NSUInteger fbVisCacheHits = 0;
 
   NSUInteger descendantsWalked = 0;
   BOOL hit = NO;
@@ -57,14 +58,14 @@ NSNumber* _Nullable fetchSnapshotVisibility(id<FBXCElementSnapshot> snapshot)
     }
   }
 
-  NSUInteger calls = atomic_fetch_add(&fbVisCacheTierBCalls, 1) + 1;
+  NSUInteger calls = atomic_fetch_add(&fbVisCacheCalls, 1) + 1;
   if (hit) {
-    atomic_fetch_add(&fbVisCacheTierBHits, 1);
+    atomic_fetch_add(&fbVisCacheHits, 1);
   }
   if (0 == (calls % 50)) {
-    NSUInteger hits = atomic_load(&fbVisCacheTierBHits);
+    NSUInteger hits = atomic_load(&fbVisCacheHits);
     double hitRate = 100.0 * (double)hits / (double)calls;
-    [FBLogger logFmt:@"[VisCache] Tier-B stats: calls=%lu hits=%lu (%.1f%%) lastWalked=%lu lastResult=%@",
+    [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] descendant-cache stats: calls=%lu hits=%lu (%.1f%%) lastWalked=%lu lastResult=%@",
      (unsigned long)calls,
      (unsigned long)hits,
      hitRate,
