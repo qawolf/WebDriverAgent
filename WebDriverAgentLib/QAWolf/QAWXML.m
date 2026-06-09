@@ -46,6 +46,23 @@ static NSString *const topNodeIndexPath = @"top";
     }
   }
 
+  // The batched page-source path (production uses use_batch=true) emits
+  // `visible` through the same fb_isVisible chain as the classic path. Warm
+  // here so the descendant-cache short-circuit fires on this path too.
+  // Gated by the same FBConfiguration.preWarmPageSource setting as the
+  // classic path so a single toggle (via /appium/settings or the
+  // appium:settings capability) controls both.
+  BOOL preWarm = [FBConfiguration preWarmPageSource];
+  [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] (QAWXML) preWarmPageSource=%@",
+   preWarm ? @"YES" : @"NO"];
+  if (preWarm) {
+    NSDate *warmStart = [NSDate date];
+    NSUInteger leavesWarmed = [FBXPath warmVisibilityCacheForSnapshot:root.snapshot];
+    [FBLogger logFmt:@"[QA_WOLF] [INFO] [VisCache] (QAWXML) Warmed %lu leaves in %.3fs",
+     (unsigned long)leavesWarmed,
+     ABS([warmStart timeIntervalSinceNow])];
+  }
+
   NSMutableArray<SnapshotWithId *> *leaves = [NSMutableArray array];
   if (rc >= 0) {
     // If 'includeHittableInPageSource' setting is enabled, then use native snapshots
