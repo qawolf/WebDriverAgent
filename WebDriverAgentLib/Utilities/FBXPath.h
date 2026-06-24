@@ -54,6 +54,161 @@ NS_ASSUME_NONNULL_BEGIN
 + (nullable NSString *)xmlStringWithRootElement:(id<FBElement>)root
                                         options:(nullable FBXMLGenerationOptions *)options;
 
+/**
+    Exported by QAWolf
+ */
++ (NSSet<Class> *)elementAttributesWithXPathQuery:(NSString *)query;
+
+
+/**
+    Exported by QAWolf
+ */
++ (int)recordElementAttributes:(xmlTextWriterPtr)writer
+                    forElement:(id<FBXCElementSnapshot>)element
+                     indexPath:(nullable NSString *)indexPath
+            includedAttributes:(nullable NSSet<Class> *)includedAttributes;
+
+/**
+    Exported by QAWolf
+ */
++ (nullable NSString *)safeXmlStringWithString:(NSString *)str;
+
+/**
+    Resolves visibility on leaf snapshots before XML generation so the
+    descendant-cache short-circuit in `fb_hasVisibleDescendants` fires for
+    internal nodes, instead of every node paying the synchronous AX-framework IPC.
+
+    Exposed for the QAWXML batched page-source path. Gated by the
+    `preWarmPageSource` session setting at call sites.
+
+    @return Number of leaves that were warmed (used for diagnostic logging).
+ */
++ (NSUInteger)warmVisibilityCacheForSnapshot:(nullable id<FBXCElementSnapshot>)snapshot;
+
 @end
+
+/**
+    Exported by QAWolf
+ */
+
+@interface FBElementAttribute : NSObject
+
+@property (nonatomic, readonly) id<FBElement> element;
+
++ (nonnull NSString *)name;
++ (nullable NSString *)valueForElement:(id<FBElement>)element;
+
++ (int)recordWithWriter:(xmlTextWriterPtr)writer forElement:(id<FBElement>)element;
++ (int)recordWithWriter:(xmlTextWriterPtr)writer forValue:(nullable NSString *)value;
+
++ (NSArray<Class> *)supportedAttributes;
+
+@end
+
+@interface FBTypeAttribute : FBElementAttribute
+
+@end
+
+@interface FBValueAttribute : FBElementAttribute
+
+@end
+
+@interface FBNameAttribute : FBElementAttribute
+
+@end
+
+@interface FBLabelAttribute : FBElementAttribute
+
+@end
+
+@interface FBEnabledAttribute : FBElementAttribute
+
+@end
+
+@interface FBVisibleAttribute : FBElementAttribute
+
+@end
+
+@interface FBAccessibleAttribute : FBElementAttribute
+
+@end
+
+@interface FBDimensionAttribute : FBElementAttribute
+
+@end
+
+@interface FBXAttribute : FBDimensionAttribute
+
+@end
+
+@interface FBYAttribute : FBDimensionAttribute
+
+@end
+
+@interface FBWidthAttribute : FBDimensionAttribute
+
+@end
+
+@interface FBHeightAttribute : FBDimensionAttribute
+
+@end
+
+@interface FBIndexAttribute : FBElementAttribute
+
+@end
+
+@interface FBHittableAttribute : FBElementAttribute
+
+@end
+
+@interface FBInternalIndexAttribute : FBElementAttribute
+
+@property (nonatomic, nonnull, readonly) NSString* indexValue;
+
+@end
+
+@interface FBApplicationBundleIdAttribute : FBElementAttribute
+
+@end
+
+@interface FBApplicationPidAttribute : FBElementAttribute
+
+@end
+
+@interface FBPlaceholderValueAttribute : FBElementAttribute
+
+@end
+
+@interface FBNativeFrameAttribute : FBElementAttribute
+
+@end
+
+@interface FBNativeAccessibilityElementAttribute : FBElementAttribute
+
+@end
+
+@interface FBTraitsAttribute : FBElementAttribute
+
+@end
+
+@interface FBMinValueAttribute : FBElementAttribute
+
+@end
+
+@interface FBMaxValueAttribute : FBElementAttribute
+
+@end
+
+@interface FBCustomActionsAttribute : FBElementAttribute
+
+@end
+
+#if TARGET_OS_TV
+
+@interface FBFocusedAttribute : FBElementAttribute
+
+@end
+
+#endif
 
 NS_ASSUME_NONNULL_END

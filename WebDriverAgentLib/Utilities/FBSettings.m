@@ -40,4 +40,5 @@ NSString* const FB_SETTING_INCLUDE_NATIVE_FRAME_IN_PAGE_SOURCE = @"includeNative
 NSString* const FB_SETTING_INCLUDE_NATIVE_ACCESSIBILITY_ELEMENT_IN_PAGE_SOURCE = @"includeNativeAccessibilityElementInPageSource";
 NSString* const FB_SETTING_INCLUDE_MIN_MAX_VALUE_IN_PAGE_SOURCE = @"includeMinMaxValueInPageSource";
 NSString* const FB_SETTING_INCLUDE_CUSTOM_ACTIONS_IN_PAGE_SOURCE = @"includeCustomActionsInPageSource";
+NSString* const FB_SETTING_PRE_WARM_PAGE_SOURCE = @"preWarmPageSource";
 NSString* const FB_SETTING_ENFORCE_CUSTOM_SNAPSHOTS = @"enforceCustomSnapshots";

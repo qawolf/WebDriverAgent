@@ -174,6 +174,10 @@ static NSSet<NSString *> *FBNilClearableSettingKeys(void)
       [FBConfiguration setIncludeCustomActionsInPageSource:[value boolValue]];
       return nil;
     };
+    map[FB_SETTING_PRE_WARM_PAGE_SOURCE] = ^FBCommandStatus *(FBSession *session, id value) {
+      [FBConfiguration setPreWarmPageSource:[value boolValue]];
+      return nil;
+    };
     map[FB_SETTING_ENFORCE_CUSTOM_SNAPSHOTS] = ^FBCommandStatus *(FBSession *session, id value) {
       [FBConfiguration setEnforceCustomSnapshots:[value boolValue]];
       return nil;
@@ -292,6 +296,9 @@ static NSSet<NSString *> *FBNilClearableSettingKeys(void)
     };
     map[FB_SETTING_INCLUDE_CUSTOM_ACTIONS_IN_PAGE_SOURCE] = ^id(FBSession *session) {
       return @([FBConfiguration includeCustomActionsInPageSource]);
+    };
+    map[FB_SETTING_PRE_WARM_PAGE_SOURCE] = ^id(FBSession *session) {
+      return @([FBConfiguration preWarmPageSource]);
     };
     map[FB_SETTING_ENFORCE_CUSTOM_SNAPSHOTS] = ^id(FBSession *session) {
       return @([FBConfiguration enforceCustomSnapshots]);

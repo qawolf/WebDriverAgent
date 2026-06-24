@@ -65,6 +65,7 @@ static BOOL FBShouldIncludeNativeFrameInPageSource = NO;
 static BOOL FBShouldIncludeNativeAccessibilityElementInPageSource = NO;
 static BOOL FBShouldIncludeMinMaxValueInPageSource = NO;
 static BOOL FBShouldIncludeCustomActionsInPageSource = NO;
+static BOOL FBShouldPreWarmPageSource = YES;
 static BOOL FBShouldEnforceCustomSnapshots = NO;
 
 @implementation FBConfiguration
@@ -703,6 +704,16 @@ static BOOL FBShouldEnforceCustomSnapshots = NO;
 + (void)setIncludeCustomActionsInPageSource:(BOOL)enabled
 {
   FBShouldIncludeCustomActionsInPageSource = enabled;
+}
+
++ (void)setPreWarmPageSource:(BOOL)enabled
+{
+  FBShouldPreWarmPageSource = enabled;
+}
+
++ (BOOL)preWarmPageSource
+{
+  return FBShouldPreWarmPageSource;
 }
 
 + (BOOL)includeCustomActionsInPageSource
