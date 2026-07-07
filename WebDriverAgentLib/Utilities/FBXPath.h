@@ -183,6 +183,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
+@interface FBNativeAccessibilityElementAttribute : FBElementAttribute
+
+@end
+
 @interface FBTraitsAttribute : FBElementAttribute
 
 @end

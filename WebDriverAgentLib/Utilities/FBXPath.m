@@ -14,6 +14,7 @@
 #import "FBLogger.h"
 #import "FBMacros.h"
 #import "FBXMLGenerationOptions.h"
+#import "FBXPathExtensions.h"
 #import "FBXCElementSnapshotWrapper+Helpers.h"
 #import "NSString+FBXMLSafeString.h"
 #import "XCUIApplication.h"
@@ -35,7 +36,17 @@ static NSString *const topNodeIndexPath = @"top";
 
 + (id)throwException:(NSString *)name forQuery:(NSString *)xpathQuery
 {
-  NSString *reason = [NSString stringWithFormat:@"Cannot evaluate results for XPath expression \"%@\"", xpathQuery];
+  return [self throwException:name forQuery:xpathQuery detail:nil];
+}
+
++ (id)throwException:(NSString *)name forQuery:(NSString *)xpathQuery detail:(nullable NSString *)detail
+{
+  NSString *reason;
+  if (nil != detail) {
+    reason = [NSString stringWithFormat:@"Cannot evaluate results for XPath expression \"%@\": %@", xpathQuery, detail];
+  } else {
+    reason = [NSString stringWithFormat:@"Cannot evaluate results for XPath expression \"%@\"", xpathQuery];
+  }
   @throw [NSException exceptionWithName:name reason:reason userInfo:@{}];
   return nil;
 }
@@ -214,16 +225,18 @@ static NSString *const topNodeIndexPath = @"top";
       contextNode = nodeSet->nodeTab[0];
     }
   }
+  NSString *evaluationError = nil;
   xmlXPathObjectPtr queryResult = [self evaluate:xpathQuery
                                         document:doc
-                                     contextNode:contextNode];
+                                     contextNode:contextNode
+                                    errorMessage:&evaluationError];
   if (NULL != contextNodeQueryResult) {
     xmlXPathFreeObject(contextNodeQueryResult);
   }
   if (NULL == queryResult) {
     xmlFreeTextWriter(writer);
     xmlFreeDoc(doc);
-    return [self throwException:FBInvalidXPathException forQuery:xpathQuery];
+    return [self throwException:FBInvalidXPathException forQuery:xpathQuery detail:evaluationError];
   }
 
   NSArray *matchingSnapshots = [self collectMatchingSnapshots:queryResult->nodesetval
@@ -326,6 +339,10 @@ static NSString *const topNodeIndexPath = @"top";
       // Include nativeFrame only when requested
       [includedAttributes removeObject:FBNativeFrameAttribute.class];
     }
+    if (!FBConfiguration.includeNativeAccessibilityElementInPageSource) {
+      // Include the raw native accessibility flag only when requested
+      [includedAttributes removeObject:FBNativeAccessibilityElementAttribute.class];
+    }
     if (!FBConfiguration.includeMinMaxValueInPageSource) {
       // minValue/maxValue are retrieved from private APIs and may be slow on deep trees
       [includedAttributes removeObject:FBMinValueAttribute.class];
@@ -366,6 +383,14 @@ static NSString *const topNodeIndexPath = @"top";
                      document:(xmlDocPtr)doc
                   contextNode:(nullable xmlNodePtr)contextNode
 {
+  return [self evaluate:xpathQuery document:doc contextNode:contextNode errorMessage:nil];
+}
+
++ (xmlXPathObjectPtr)evaluate:(NSString *)xpathQuery
+                     document:(xmlDocPtr)doc
+                  contextNode:(nullable xmlNodePtr)contextNode
+                 errorMessage:(NSString * _Nullable * _Nullable)errorMessage
+{
   xmlXPathContextPtr xpathCtx = xmlXPathNewContext(doc);
   if (NULL == xpathCtx) {
     [FBLogger logFmt:@"Failed to invoke libxml2>xmlXPathNewContext for XPath query \"%@\"", xpathQuery];
@@ -373,10 +398,21 @@ static NSString *const topNodeIndexPath = @"top";
   }
   xpathCtx->node = NULL == contextNode ? doc->children : contextNode;
 
+  FBXPathExtensions *extensions = [FBXPathExtensions new];
+  [extensions registerFunctionsWithContext:xpathCtx];
+
   xmlXPathObjectPtr xpathObj = xmlXPathEvalExpression((const xmlChar *)[xpathQuery UTF8String], xpathCtx);
   if (NULL == xpathObj) {
+    NSString *detail = extensions.lastEvaluationError;
+    if (NULL != errorMessage) {
+      *errorMessage = detail;
+    }
+    if (nil != detail) {
+      [FBLogger logFmt:@"Failed to evaluate XPath query \"%@\": %@", xpathQuery, detail];
+    } else {
+      [FBLogger logFmt:@"Failed to invoke libxml2>xmlXPathEvalExpression for XPath query \"%@\"", xpathQuery];
+    }
     xmlXPathFreeContext(xpathCtx);
-    [FBLogger logFmt:@"Failed to invoke libxml2>xmlXPathEvalExpression for XPath query \"%@\"", xpathQuery];
     return NULL;
   }
   xmlXPathFreeContext(xpathCtx);
@@ -584,6 +620,7 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
            FBEnabledAttribute.class,
            FBVisibleAttribute.class,
            FBAccessibleAttribute.class,
+           FBNativeAccessibilityElementAttribute.class,
 #if TARGET_OS_TV
            FBFocusedAttribute.class,
 #endif
@@ -849,6 +886,19 @@ static NSString *const FBAbstractMethodInvocationException = @"AbstractMethodInv
 + (NSString *)valueForElement:(id<FBElement>)element
 {
   return NSStringFromCGRect(element.wdNativeFrame);
+}
+@end
+
+@implementation FBNativeAccessibilityElementAttribute
+
++ (NSString *)name
+{
+  return @"nativeAccessibilityElement";
+}
+
++ (NSString *)valueForElement:(id<FBElement>)element
+{
+  return FBBoolToString(element.wdNativeAccessibilityElement);
 }
 @end
 
